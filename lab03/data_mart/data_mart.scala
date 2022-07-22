@@ -149,7 +149,7 @@ object data_mart {
       .save()
 
     // предоставляем права чекеру на таблицу
-    val query = s"GRANT SELECT on clients to PUBLIC"
+    val query = s"GRANT SELECT on clients to labchecker2"
     val connector = DriverManager.getConnection(f"$urlPostgre$sourcePostgreSchema?user=$loginPostgre&password=$password")
     val resultSet = connector.createStatement.execute(query)
   }
