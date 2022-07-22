@@ -3,6 +3,9 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import java.net.URLDecoder
 import scala.util.{Try, Success, Failure}
+import java.sql.DriverManager
+import java.sql.Connection
+import java.sql.ResultSet
 
 object data_mart {
 
@@ -142,7 +145,13 @@ object data_mart {
       .option("user", loginPostgre)
       .option("password", password)
       .option("driver", driverPostgre)
+      .mode("overwrite")
       .save()
+
+    // предоставляем права чекеру на таблицу
+    val query = s"GRANT SELECT on clients to PUBLIC"
+    val connector = DriverManager.getConnection(f"$urlPostgre$sourcePostgreSchema?user=$loginPostgre&password=$password")
+    val resultSet = connector.createStatement.execute(query)
   }
 
   }
