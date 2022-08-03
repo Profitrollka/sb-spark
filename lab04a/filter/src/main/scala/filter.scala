@@ -42,13 +42,13 @@ object filter {
         from_unixtime(col("timestamp") / 1000)).cast("string"), "-", ""))
 
     // отбираем просмотры
-    val view = events.where(col("event_type") === "view")
+    val view = events.where(col("event_type") === "view").orderBy("date")
       .select(to_json(struct("*")).alias("value"), col("date"))
 
     view.write.partitionBy("date").json(outputDirPrefix + "/view")
 
     // отбираем покупки
-    val buy = events.where(col("event_type") === "buy")
+    val buy = events.where(col("event_type") === "buy").orderBy("date")
       .select(to_json(struct("*")).alias("value"), col("date"))
 
     buy.write.partitionBy("date").json(outputDirPrefix + "/buy")
