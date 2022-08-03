@@ -33,7 +33,7 @@ object filter {
       .add("item_id", StringType, true)
       .add("item_price", IntegerType, true)
       .add("uid", StringType, true)
-      .add("timestamp", LongType, true)
+      .add("timestamp", StringType, true)
 
     spark.conf.set("spark.sql.session.timeZone", "UTC")
     val events = kafkaValue.withColumn("value",from_json(col("value"), schema))
