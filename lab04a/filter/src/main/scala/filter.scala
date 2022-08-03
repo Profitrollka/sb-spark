@@ -6,7 +6,7 @@ import org.apache.spark.sql.types.{MapType, StringType, StructType, IntegerType,
 object filter {
 
   def main(args: Array[String]): Unit = {
-    Logger.getLogger("org").setLevel(Level.ERROR)
+    Logger.getLogger("org").setLevel(Level.INFO)
 
     val spark = SparkSession.builder()
       .appName("lab04a")
@@ -14,6 +14,7 @@ object filter {
 
     val offset: String = spark.sparkContext.getConf.get("spark.filter.offset")
     val topicName: String = spark.sparkContext.getConf.get("spark.filter.topic_name")
+    val outputDirPrefix = spark.sparkContext.getConf.get("spark.filter.output_dir_prefix")
 
     val kafka_df = spark.read
       .format("kafka")
@@ -44,11 +45,12 @@ object filter {
     val view = events.where(col("event_type") === "view")
       .select(to_json(struct("*")).alias("value"), col("date"))
 
-    view.write.partitionBy("date").json("./visits/view")
+    view.write.partitionBy("date").json(outputDirPrefix + "/view")
 
     // отбираем покупки
-    val buy = events.where(col("event_type") === "buy").select(to_json(struct("*")).alias("value"))
+    val buy = events.where(col("event_type") === "buy")
+      .select(to_json(struct("*")).alias("value"), col("date"))
 
-    buy.write.partitionBy("date").json("./visits/buy")
+    buy.write.partitionBy("date").json(outputDirPrefix + "/buy")
   }
 }
