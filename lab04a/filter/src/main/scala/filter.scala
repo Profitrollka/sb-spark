@@ -40,17 +40,15 @@ object filter {
       .select(col("value.*"))
       .withColumn("date", regexp_replace(to_date(
         from_unixtime(col("timestamp") / 1000)).cast("string"), "-", ""))
+      .withColumn("p_date", regexp_replace(to_date(
+        from_unixtime(col("timestamp") / 1000)).cast("string"), "-", ""))
 
     // отбираем просмотры
-    val view = events.where(col("event_type") === "view").orderBy("date")
-      .select(to_json(struct("*")).alias("value"), col("date").alias("p_date"))
-
-    view.write.partitionBy("p_date").json(outputDirPrefix + "/view")
+    events.where(col("event_type") === "view").orderBy("date")
+      .write.partitionBy("p_date").json(outputDirPrefix + "/view")
 
     // отбираем покупки
-    val buy = events.where(col("event_type") === "buy").orderBy("date")
-      .select(to_json(struct("*")).alias("value"), col("date").alias("p_date"))
-
-    buy.write.partitionBy("p_date").json(outputDirPrefix + "/buy")
+    events.where(col("event_type") === "buy").orderBy("date")
+      .write.partitionBy("p_date").json(outputDirPrefix + "/buy")
   }
 }
