@@ -1,9 +1,9 @@
 import org.apache.log4j._
-import org.apache.spark.sql.{SparkSession}
+import org.apache.spark.sql.{SparkSession, DataFrame}
 import org.apache.spark.sql.streaming.Trigger
-import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{StringType, StructType, IntegerType, TimestampType}
+import org.apache.spark.sql.types.{StringType, StructType, IntegerType, TimestampType, DoubleType}
+
 
 object agg {
 
@@ -18,12 +18,10 @@ object agg {
     val kafkaParams = Map(
       "kafka.bootstrap.servers" -> "spark-master-1.newprolab.com:6667",
       "subscribe" -> "alyona_kapustyan",
-      "startingOffsets" -> "earliest",
-      "maxOffsetsPerTrigger" -> "5",
-      "minPartitions" -> "10"
+      "startingOffsets" -> "earliest"
     )
     val checkpointLocation = "/user/alyona.kapustyan/lab04b/checkpoint"
-    val trigger = "10 seconds"
+    val trigger = "30 seconds"
     val mode = "update"
     val output = "alyona_kapustyan_lab04b_out"
 
@@ -46,13 +44,13 @@ object agg {
       .select(col("value.*"))
 
     // считаем агрегаты
-    val eventsAggDf = eventsDf.groupBy(window(col("timestamp"), "60 minutes"))
+    val eventsAggDf = eventsDf.groupBy(window((col("timestamp").cast("bigint") / 1000).cast(TimestampType), "60 minutes"))
       .agg(sum(when(col("event_type") === "buy", col("item_price"))).alias("revenue"),
         sum(when(col("uid").isNotNull, lit(1)).otherwise(lit(0))).alias("visitors"),
         sum(when(col("event_type") === "buy", lit(1)).otherwise(lit(0))).alias("purchases"))
       .withColumn("aov", col("revenue")/col("purchases"))
       .withColumn("start_ts", unix_timestamp(col("window.start")))
-      .withColumn("end_ts", unix_timestamp(col("window.end").cast(TimestampType)))
+      .withColumn("end_ts", unix_timestamp(col("window.end")))
       .select("start_ts", "end_ts", "revenue", "visitors", "purchases", "aov")
 
     def createKafkaSinc(trigger: String, mode: String, output: String, chkName: String,  df: DataFrame) = {
