@@ -35,34 +35,25 @@ object users_items {
     val unionMatrix = viewMatrix.join(buyMatrix, Seq("uid", "max_date"), "full").na.fill(0)
 
     // определяем максимальную дату в объединенном df
-    val maxDate = unionMatrix.select(col("max_date")).rdd.map(r => r(0)).collect()(1)
+    val maxDate = unionMatrix.select(col("max_date")).rdd.map(r => r(0)).collect()(1).toString.replaceAll("-", "")
 
     // удаляем колонку с максимальной датой
     val userItemMatrix = unionMatrix.drop(col("max_date"))
 
     if (modeType == 1) {
+      // читаем старую таблицу и объединяем ее с новым df
       val combineMatrix = spark.read.parquet(outputDirPrefix).union(userItemMatrix)
+
+      // пишем результата во временную директорию
       combineMatrix.write
         .mode("overwrite")
-        .parquet(outputDirPrefix + "_test" + "/" + maxDate)
-
-      // имя дериктории для удаления
-      val dirForDelete: String = outputDirPrefix + "/" + maxDate
-
-      // пишем результат в промежуточную таблицу
-      spark.sql(f"drop table if exists $dirForDelete")
-
-      // читаем из промежуточной таюлицы и записываем в первоначальную директорию
-      val combineMatrixNew = spark.read.parquet(outputDirPrefix).union(userItemMatrix)
-      combineMatrixNew.write.parquet(outputDirPrefix + "/" + maxDate)
+        .parquet(outputDirPrefix + "/" + maxDate)
     }
     else {
       userItemMatrix.write
         .mode("append")
         .parquet(outputDirPrefix + "/" + maxDate)
     }
-
-    //collectUserItemMatrix(inputDirPrefix, outputDirPrefix, modeType)
 
   }
 
