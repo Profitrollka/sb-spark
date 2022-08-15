@@ -12,7 +12,7 @@ object users_items {
     val outputDirPrefix: String = spark.sparkContext.getConf.get("spark.users_items.output_dir")
 
     val WindSpec = Window.partitionBy().orderBy(to_date(col("date"), "yyyyMMdd").desc)
-
+    
     val view = spark.read.json(inputDirPrefix + "/view")
       .where(col("uid").isNotNull)
       .withColumn("max_date", first(to_date(col("date"), "yyyyMMdd")).over(WindSpec))
@@ -43,8 +43,7 @@ object users_items {
     if (modeType == 1) {
       // читаем старую таблицу и объединяем ее с новым df
       val combineMatrix = spark.read.parquet(outputDirPrefix).union(userItemMatrix)
-
-      // пишем результата во временную директорию
+      
       combineMatrix.write
         .mode("overwrite")
         .parquet(outputDirPrefix + "/" + maxDate)
