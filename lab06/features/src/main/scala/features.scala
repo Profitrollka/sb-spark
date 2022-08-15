@@ -50,7 +50,7 @@ object features {
     .otherwise(0.0))
     .withColumn("web_day_tue", when(dayofweek(col("datetime")) === 3, 1.0)
       .otherwise(0.0))
-    .withColumn("web_day_wen", when(dayofweek(col("datetime")) === 4, 1.0)
+    .withColumn("web_day_wed", when(dayofweek(col("datetime")) === 4, 1.0)
       .otherwise(0.0))
     .withColumn("web_day_thu", when(dayofweek(col("datetime")) === 5, 1.0)
       .otherwise(0.0))
@@ -111,7 +111,7 @@ object features {
     .groupBy("uid")
     .agg(sum("web_day_mon").alias("web_day_mon"),
       sum("web_day_tue").alias("web_day_tue"),
-      sum("web_day_wen").alias("web_day_wen"),
+      sum("web_day_wed").alias("web_day_wed"),
       sum("web_day_thu").alias("web_day_thu"),
       sum("web_day_fri").alias("web_day_fri"),
       sum("web_day_sat").alias("web_day_sat"),
